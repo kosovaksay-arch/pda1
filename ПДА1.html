@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ПДА Калькулятор">
+    <title>ПДА Калькулятор — ООО «Пульсар»</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 15px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; }
+        .agency-header { background: #f8f9fa; padding: 10px 12px; border-bottom: 2px solid #667eea; text-align: center; }
+        .agency-name { font-size: 1.1em; font-weight: bold; color: #2c3e50; margin-bottom: 3px; }
+        .agency-details { font-size: 0.65em; color: #555; line-height: 1.3; }
+        .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 12px; text-align: center; }
+        .header h1 { font-size: 1.1em; margin-bottom: 3px; }
+        .header p { opacity: 0.9; font-size: 0.8em; }
+        .main-form { padding: 12px; background: #f8f9fa; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; margin-bottom: 12px; }
+        .form-group { background: white; padding: 6px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .form-group label { display: block; font-weight: 600; color: #2c3e50; margin-bottom: 3px; font-size: 0.75em; }
+        .form-group select, .form-group input { width: 100%; padding: 6px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 0.85em; -webkit-appearance: none; }
+        .form-group select:focus, .form-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .checkbox-group { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+        .checkbox-group input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; accent-color: #667eea; }
+        .btn-container { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 9px 24px; border-radius: 6px; font-size: 0.9em; cursor: pointer; font-weight: 600; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-print { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+        .btn-save { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); }
+        .btn-history { background: linear-gradient(135deg, #f39c12 0%, #d68910 100%); }
+        .btn-clear { background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%); }
+        .results { padding: 12px; display: none; }
+        .results.show { display: block; }
+        .sections-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .sections-grid .section-wrapper { display: flex; flex-direction: column; }
+        .section { background: white; border-radius: 5px; border: 1px solid #ecf0f1; overflow: hidden; flex: 1; }
+        .section-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 6px 8px; font-weight: 600; font-size: 0.8em; display: flex; align-items: center; gap: 4px; justify-content: center; }
+        .section-header.kek { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); }
+        .section-header.vvp { background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); }
+        .section-header.mandatory { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+        .section-header.services { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.7em; table-layout: fixed; }
+        th, td { padding: 3px 2px; text-align: center; border-bottom: 1px solid #ecf0f1; }
+        th { background: #f8f9fa; font-weight: 600; color: #2c3e50; font-size: 0.58em; text-transform: uppercase; }
+        th:nth-child(1), td:nth-child(1) { width: 5%; }
+        th:nth-child(2), td:nth-child(2) { width: 28%; }
+        th:nth-child(3), td:nth-child(3) { width: 13%; }
+        th:nth-child(4), td:nth-child(4) { width: 11%; }
+        th:nth-child(5), td:nth-child(5) { width: 16%; }
+        th:nth-child(6), td:nth-child(6) { width: 13%; }
+        th:nth-child(7), td:nth-child(7) { width: 14%; }
+        .checkbox-cell { width: 20px; }
+        .checkbox-cell input[type="checkbox"] { width: 12px; height: 12px; cursor: pointer; accent-color: #667eea; }
+        .amount { font-weight: 600; color: #2c3e50; text-align: center; }
+        .vat-amount { color: #27ae60; font-weight: 600; }
+        .rate-input, .qty-input, .name-input { width: 100%; padding: 2px; border: 1px solid #ddd; border-radius: 3px; text-align: center; font-size: 0.85em; }
+        .vat-checkbox { width: 12px; height: 12px; cursor: pointer; accent-color: #27ae60; }
+        .total-row { background: #f8f9fa; font-weight: 700; }
+        .total-row td { border-top: 2px solid #667eea; padding: 6px; font-size: 0.8em; }
+        .grand-total { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .grand-total td { border-top: 3px solid white; color: white; font-size: 0.9em; }
+        .vat-info { background: #fff3cd; border-left: 4px solid #ffc107; padding: 6px; margin-top: 6px; border-radius: 4px; font-size: 0.65em; }
+        .ice-breaker-notice { background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 5px; margin-bottom: 6px; border-radius: 4px; color: #0c5460; font-size: 0.65em; text-align: center; }
+        .ship-info { background: #e8f4f8; border-left: 4px solid #3498db; padding: 6px; margin-bottom: 6px; border-radius: 4px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; font-size: 0.65em; }
+        .ship-info-item { display: flex; flex-direction: column; text-align: center; }
+        .ship-info-label { font-size: 0.75em; color: #7f8c8d; margin-bottom: 1px; }
+        .ship-info-value { font-weight: 600; color: #2c3e50; }
+        .signature-section { margin-top: 10px; display: flex; justify-content: space-between; padding-top: 6px; border-top: 2px solid #ecf0f1; }
+        .proforma-title { background: #f8f9fa; padding: 8px 10px; border-bottom: 2px solid #667eea; margin-bottom: 8px; }
+        .proforma-title h2 { color: #2c3e50; font-size: 0.85em; margin-bottom: 5px; text-align: center; }
+        .proforma-details { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; font-size: 0.65em; }
+        .proforma-detail-item { display: flex; flex-direction: column; gap: 2px; text-align: center; }
+        .proforma-detail-label { font-weight: 600; color: #7f8c8d; }
+        .proforma-detail-value { color: #2c3e50; font-weight: 500; }
+        .hidden { display: none; }
+        .bilingual { display: flex; flex-direction: column; gap: 1px; line-height: 1.2; }
+        .bilingual .ru { font-weight: 600; }
+        .bilingual .en { font-size: 0.85em; color: #7f8c8d; }
+        .no-print { }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: white; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; display: none; }
+        .toast.show { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        .history-panel { position: fixed; top: 0; right: -400px; width: 380px; height: 100vh; background: white; box-shadow: -4px 0 20px rgba(0,0,0,0.2); z-index: 9999; transition: right 0.3s ease; overflow-y: auto; }
+        .history-panel.show { right: 0; }
+        .history-header { background: linear-gradient(135deg, #f39c12 0%, #d68910 100%); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .history-close { background: none; border: none; color: white; font-size: 1.5em; cursor: pointer; }
+        .history-list { padding: 15px; }
+        .history-item { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid #f39c12; }
+        .history-item:hover { background: #ecf0f1; }
+        .history-item h4 { font-size: 0.9em; margin-bottom: 5px; }
+        .history-item p { font-size: 0.75em; color: #7f8c8d; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; display: none; }
+        .overlay.show { display: block; }
+        
+        @media print {
+            body { background: white; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .container { box-shadow: none; max-width: 100%; border-radius: 0; width: 210mm; margin: 0; }
+            .section { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+            .checkbox-cell { display: none; }
+            input[type="checkbox"] { display: none; }
+            .rate-input, .qty-input, .name-input { border: none; background: transparent; padding: 3px 0; font-weight: 600; }
+            tr.row-unchecked { display: none !important; }
+            @page { size: A4 portrait; margin: 8mm 8mm 10mm 8mm; }
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid, .sections-grid, .proforma-details, .ship-info { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1em; }
+            .btn { padding: 8px 16px; font-size: 0.85em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="printContent">
+        <div class="agency-header">
+            <div class="agency-name">ООО «Пульсар»</div>
+            <div class="agency-details">Юр. адрес: 344065, г.Ростов-на-Дону, ул. Троллейбусная, д. 24/2В, оф.205 | ОГРН 1076164017170, ИНН 6164273939, КПП 616601001 | р/с 40702810226160000138 в филиале "Ростовский" АО "Альфа-Банк" | БИК 046015207, к/с 30101810500000000207</div>
+        </div>
+        <div class="header"><h1>📋 ПРОФОРМА ДИССБУРСМЕНТСКОГО СЧЁТА</h1></div>
+        <div class="main-form no-print">
+            <div class="form-grid">
+                <div class="form-group"><label>📄 Номер:</label><input type="text" id="proformaNumber" placeholder="123/2025"></div>
+                <div class="form-group"><label>🚢 Судно:</label><input type="text" id="vesselName" placeholder="Название"></div>
+                <div class="form-group"><label>🏴‍☠️ Флаг:</label><input type="text" id="vesselFlag" placeholder="Страна"></div>
+                <div class="form-group"><label>🎯 Цель:</label><select id="purpose" onchange="toggleOtherPurpose(); calculate();"><option value="">Выберите...</option><option value="Погрузка">Погрузка</option><option value="Выгрузка">Выгрузка</option><option value="Транзит">Транзит</option><option value="Другое">Другое</option></select></div>
+                <div class="form-group hidden" id="otherPurposeGroup"><label>📝 Цель:</label><input type="text" id="otherPurpose" placeholder="Впишите" oninput="calculate()"></div>
+                <div class="form-group"><label>💳 Плательщик:</label><input type="text" id="payer" placeholder="Компания"></div>
+                <div class="form-group"><label>🏭 Порт:</label><select id="port" onchange="calculate()"><option value="">Выберите...</option><option value="azov">Азов</option><option value="rostov">Ростов-на-Дону</option><option value="astrakhan">Астрахань</option></select></div>
+                <div class="form-group"><label>📅 Дата:</label><input type="date" id="date" onchange="calculate()"></div>
+                <div class="form-group"><label>🚢 Тип:</label><select id="vesselType" onchange="calculate()"><option value="">Выберите...</option><option value="general">Все суда</option><option value="ro-ro">Накатные</option><option value="tanker">Наливные</option></select></div>
+                <div class="form-group"><label>🌍 Плавание:</label><select id="voyageType" onchange="calculate()"><option value="">Выберите...</option><option value="foreign">Загран</option><option value="cabotage">Каботаж</option></select></div>
+                <div class="form-group"><label>⚖️ GT:</label><input type="number" id="gt" placeholder="GT" min="0" step="1" oninput="calculate()"></div>
+                <div class="form-group"><label>💼 Агентское:</label><input type="number" id="agencyFee" placeholder="Сумма" min="0" step="1" value="0" oninput="calculate()"></div>
+                <div class="form-group"><label>📋 Разделы:</label><div class="checkbox-group"><input type="checkbox" id="showKEK" checked onchange="calculate()"><label for="showKEK">КЕК</label></div><div class="checkbox-group"><input type="checkbox" id="showVVP" checked onchange="calculate()"><label for="showVVP">ВВП</label></div><div class="checkbox-group"><input type="checkbox" id="showMandatory" checked onchange="calculate()"><label for="showMandatory">Обязательные</label></div><div class="checkbox-group"><input type="checkbox" id="showServices" checked onchange="calculate()"><label for="showServices">Услуги</label></div></div>
+            </div>
+            <div class="btn-container">
+                <button class="btn btn-save" id="saveBtn" onclick="saveCalculation()" disabled>💾 Сохранить</button>
+                <button class="btn btn-history" onclick="toggleHistory()">📜 История</button>
+                <button class="btn btn-clear" onclick="clearForm()">🗑️ Очистить</button>
+                <button class="btn btn-print" id="printBtn" onclick="printToPDF()" disabled>🖨️ Печать</button>
+            </div>
+        </div>
+        <div id="results" class="results">
+            <div class="proforma-title"><h2>Проформа дисбурсментского счета</h2><div class="proforma-details"><div class="proforma-detail-item"><span class="proforma-detail-label">Номер</span><span class="proforma-detail-value" id="proformaNumberDisplay">-</span></div><div class="proforma-detail-item"><span class="proforma-detail-label">Судно</span><span class="proforma-detail-value" id="vesselNameDisplay">-</span></div><div class="proforma-detail-item"><span class="proforma-detail-label">Флаг</span><span class="proforma-detail-value" id="vesselFlagDisplay">-</span></div><div class="proforma-detail-item"><span class="proforma-detail-label">Цель</span><span class="proforma-detail-value" id="purposeDisplay">-</span></div><div class="proforma-detail-item"><span class="proforma-detail-label">Плательщик</span><span class="proforma-detail-value" id="payerDisplay">-</span></div></div></div>
+            <div class="ship-info" id="shipInfo"></div><div id="iceBreakerNotice"></div>
+            <div class="sections-grid" id="sectionsGrid">
+                <div class="section-wrapper" id="wrapper-kek"><div class="section" id="kekSection"><div class="section-header kek"><span>🌉</span><span>КЕК / KYC</span></div><table><thead><tr><th class="checkbox-cell no-print">✓</th><th>Наименование</th><th>Ставка</th><th>Кол-во</th><th>Сумма</th><th class="checkbox-cell no-print">НДС</th><th>НДС 5%</th></tr></thead><tbody id="kekCharges"></tbody></table></div></div>
+                <div class="section-wrapper" id="wrapper-vvp"><div class="section" id="vvpSection"><div class="section-header vvp"><span>🚤</span><span>ВВП</span></div><table><thead><tr><th class="checkbox-cell no-print">✓</th><th>Наименование</th><th>Ставка</th><th>Кол-во</th><th>Сумма</th><th class="checkbox-cell no-print">НДС</th><th>НДС 5%</th></tr></thead><tbody id="vvpCharges"></tbody></table></div></div>
+                <div class="section-wrapper" id="wrapper-mandatory"><div class="section" id="mandatorySection"><div class="section-header mandatory"><span>📌</span><span>ОБЯЗАТЕЛЬНЫЕ СБОРЫ</span></div><table><thead><tr><th class="checkbox-cell no-print">✓</th><th>Наименование</th><th>Ставка</th><th>Кол-во</th><th>Сумма</th><th class="checkbox-cell no-print">НДС</th><th>НДС 5%</th></tr></thead><tbody id="mandatoryCharges"></tbody></table></div></div>
+                <div class="section-wrapper" id="wrapper-services"><div class="section" id="servicesSection"><div class="section-header services"><span>🔧</span><span>УСЛУГИ</span></div><table><thead><tr><th class="checkbox-cell no-print">✓</th><th>Наименование</th><th>Ставка</th><th>Кол-во</th><th>Сумма</th><th class="checkbox-cell no-print">НДС</th><th>НДС 5%</th></tr></thead><tbody id="allServices"></tbody></table></div></div>
+            </div>
+            <div class="section"><table><tbody><tr class="total-row"><td colspan="5">Итого:</td><td class="amount" id="totalExpenses">0.00 ₽</td></tr><tr class="total-row"><td colspan="5">Агентское:</td><td class="amount" id="totalAgencyFee">0.00 ₽</td></tr><tr class="grand-total"><td colspan="5">📊 ВСЕГО:</td><td class="amount" id="grandTotal">0.00 ₽</td></tr></tbody></table><div class="vat-info"><strong>НДС (5%):</strong> <span id="vatAmount">0.00 ₽</span></div></div>
+            <div class="signature-section"><div><strong>Агент:</strong><div style="margin-top: 25px; border-top: 1px solid #2c3e50; width: 160px;"></div></div><div style="text-align: right;"><div id="pdfDate"></div></div></div>
+        </div>
+    </div>
+    
+    <!-- History Panel -->
+    <div class="overlay" id="overlay" onclick="toggleHistory()"></div>
+    <div class="history-panel" id="historyPanel">
+        <div class="history-header">
+            <h3>📜 История расчётов</h3>
+            <button class="history-close" onclick="toggleHistory()">×</button>
+        </div>
+        <div class="history-list" id="historyList"></div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ... (весь наш существующий JS код + новые функции PWA)
+        // Я добавлю автосохранение, историю и PWA функции в следующем сообщении
+        // Чтобы не превысить лимит символов
+    </script>
+    
+    <script>
+        // Регистрация Service Worker для PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('✅ Service Worker зарегистрирован'))
+                .catch(err => console.log('❌ Ошибка SW:', err));
+        }
+        
+        // Уведомления
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // История
+        function toggleHistory() {
+            document.getElementById('historyPanel').classList.toggle('show');
+            document.getElementById('overlay').classList.toggle('show');
+            if (document.getElementById('historyPanel').classList.contains('show')) {
+                renderHistory();
+            }
+        }
+        
+        function saveCalculation() {
+            const data = getFormData();
+            const history = JSON.parse(localStorage.getItem('pdaHistory') || '[]');
+            history.unshift({
+                id: Date.now(),
+                date: new Date().toLocaleString('ru-RU'),
+                ...data
+            });
+            if (history.length > 20) history.pop(); // Храним последние 20
+            localStorage.setItem('pdaHistory', JSON.stringify(history));
+            showToast('✅ Расчёт сохранён!');
+        }
+        
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('pdaHistory') || '[]');
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #7f8c8d;">История пуста</p>';
+                return;
+            }
+            list.innerHTML = history.map(item => `
+                <div class="history-item" onclick="loadHistory(${item.id})">
+                    <h4>📄 ${item.proformaNumber || 'Без номера'} | ${item.vesselName || 'Без судна'}</h4>
+                    <p>📅 ${item.date} | 🏭 ${item.port || '?'}</p>
+                </div>
+            `).join('');
+        }
+        
+        function loadHistory(id) {
+            const history = JSON.parse(localStorage.getItem('pdaHistory') || '[]');
+            const item = history.find(h => h.id === id);
+            if (item) {
+                setFormData(item);
+                toggleHistory();
+                calculate();
+                showToast('📋 Расчёт загружен!');
+            }
+        }
+        
+        function clearForm() {
+            if (confirm('Очистить все поля?')) {
+                document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach(el => el.value = '');
+                document.getElementById('agencyFee').value = '0';
+                document.getElementById('results').classList.remove('show');
+                document.getElementById('printBtn').disabled = true;
+                document.getElementById('saveBtn').disabled = true;
+                showToast('🗑️ Форма очищена');
+            }
+        }
+        
+        function getFormData() {
+            return {
+                proformaNumber: document.getElementById('proformaNumber').value,
+                vesselName: document.getElementById('vesselName').value,
+                vesselFlag: document.getElementById('vesselFlag').value,
+                purpose: document.getElementById('purpose').value,
+                payer: document.getElementById('payer').value,
+                port: document.getElementById('port').value,
+                date: document.getElementById('date').value,
+                vesselType: document.getElementById('vesselType').value,
+                voyageType: document.getElementById('voyageType').value,
+                gt: document.getElementById('gt').value,
+                agencyFee: document.getElementById('agencyFee').value
+            };
+        }
+        
+        function setFormData(data) {
+            document.getElementById('proformaNumber').value = data.proformaNumber || '';
+            document.getElementById('vesselName').value = data.vesselName || '';
+            document.getElementById('vesselFlag').value = data.vesselFlag || '';
+            document.getElementById('purpose').value = data.purpose || '';
+            document.getElementById('payer').value = data.payer || '';
+            document.getElementById('port').value = data.port || '';
+            document.getElementById('date').value = data.date || '';
+            document.getElementById('vesselType').value = data.vesselType || '';
+            document.getElementById('voyageType').value = data.voyageType || '';
+            document.getElementById('gt').value = data.gt || '';
+            document.getElementById('agencyFee').value = data.agencyFee || '0';
+        }
+        
+        // Автосохранение при вводе
+        let autoSaveTimeout;
+        function triggerAutoSave() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                localStorage.setItem('pdaAutoSave', JSON.stringify(getFormData()));
+                console.log('💾 Автосохранение');
+            }, 2000);
+        }
+        
+        // Восстановление автосохранения
+        function restoreAutoSave() {
+            const saved = localStorage.getItem('pdaAutoSave');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.vesselName) {
+                    setFormData(data);
+                    calculate();
+                    console.log('🔄 Автосохранение восстановлено');
+                }
+            }
+        }
+        
+        // Добавляем автосохранение ко всем полям
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('input, select').forEach(el => {
+                el.addEventListener('input', triggerAutoSave);
+                el.addEventListener('change', triggerAutoSave);
+            });
+            restoreAutoSave();
+        });
+    </script>
+    
+    <script>
+        // ВЕСЬ НАШ СУЩЕСТВУЮЩИЙ JS КОД (rates, calculate, и т.д.)
+        // Вставляешь сюда весь код из предыдущей версии
+        // Я не дублирую чтобы не превышать лимит
+    </script>
+</body>
+</html>
